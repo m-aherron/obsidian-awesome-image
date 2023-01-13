@@ -1,4 +1,4 @@
-import {App, PluginSettingTab, Setting} from 'obsidian';
+import {App, normalizePath, Notice, PluginSettingTab, Setting} from 'obsidian';
 import {t} from 'src/lang/helpers';
 import type ImageToolkitPlugin from "src/main";
 import {
@@ -16,6 +16,7 @@ import {
 } from './constants';
 import Pickr from '@simonwep/pickr';
 import {ImgSettingIto} from "../to/imgTo";
+import safeRegex from "safe-regex";
 
 export const DEFAULT_SETTINGS: ImgSettingIto = {
     viewImageEditor: true,
@@ -47,7 +48,13 @@ export const DEFAULT_SETTINGS: ImgSettingIto = {
     moveTheImageHotkey: MOVE_THE_IMAGE.DEFAULT_HOTKEY,
     switchTheImageHotkey: SWITCH_THE_IMAGE.DEFAULT_HOTKEY,
     doubleClickToolbar: TOOLBAR_CONF[3].class, // FULL_SCREEN
-    viewTriggerHotkey: MODIFIER_HOTKEYS.NONE
+    viewTriggerHotkey: MODIFIER_HOTKEYS.NONE,
+
+    // for org
+    realTimeUpdate: false,
+    excludedFolders: [".git/", ".obsidian/", ".trash/"],
+    includedFileRegex: ".*\\.md",
+    mediaRootDirectory: "assets/img",
 }
 
 export class ImageToolkitSettingTab extends PluginSettingTab {
@@ -61,6 +68,63 @@ export class ImageToolkitSettingTab extends PluginSettingTab {
     display(): void {
         let {containerEl} = this;
         containerEl.empty();
+
+        containerEl.createEl("h2", {text: "Awesome Image"});
+
+        new Setting(containerEl)
+            .setName("On paste processing")
+            .setDesc("Process active page if image was pasted.")
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.realTimeUpdate)
+                    .onChange(async (value) => {
+                        this.plugin.settings.realTimeUpdate = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Ignore folders")
+            .setDesc("Do not search or rename attachments in these folders. Write each folder on a new line.")
+            .addTextArea(cb => cb
+                .setPlaceholder("Example:\n.git/\n.obsidian/")
+                .setValue(this.plugin.settings.excludedFolders.join("\n"))
+                .onChange(async (value) => {
+                    this.plugin.settings.excludedFolders = value.trim()
+                        .split("\n")
+                        .map(path => (path.length == 0 ? path : normalizePath(path)) + "/");
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName("Include")
+            .setDesc(
+                "Include only files matching this regex pattern when running on all notes."
+            )
+            .addText((text) =>
+                text.setValue(this.plugin.settings.includedFileRegex).onChange(async (value) => {
+                    if (!safeRegex(value)) {
+                        new Notice(
+                            "Unsafe regex! https://www.npmjs.com/package/safe-regex"
+                        );
+                        return;
+                    }
+                    this.plugin.settings.includedFileRegex = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName("Media folder")
+            .setDesc("Folder to keep all downloaded media files.")
+            .addText((text) =>
+                text
+                    .setValue(this.plugin.settings.mediaRootDirectory)
+                    .onChange(async (value) => {
+                        this.plugin.settings.mediaRootDirectory = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
 
         containerEl.createEl('h2', {text: t("IMAGE_TOOLKIT_SETTINGS_TITLE")});
 

@@ -161,4 +161,10 @@ export interface ImgSettingIto {
     switchTheImageHotkey: string;
     doubleClickToolbar: string;
     viewTriggerHotkey: string;
+
+    // for org
+    realTimeUpdate: boolean;
+    excludedFolders: string[];
+    includedFileRegex: string;
+    mediaRootDirectory: string;
 }
