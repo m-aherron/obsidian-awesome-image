@@ -26,6 +26,8 @@ The best way to use this plugin is toggle on `On paste processing` in settings a
 run `Awesome Image: Process images for all your notes` once.
 After that, all your images will be in good hands.
 
+You may also want to toggle *OFF* `Use [[Wikilinks]]` under `Files & Links` since only Markdown links is supported now.
+
 Below are all commands it offers:
 
 1. Press `Ctrl+P` (or `Cmd+P` on macOS) to open the Command palette.

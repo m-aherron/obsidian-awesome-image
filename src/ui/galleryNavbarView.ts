@@ -38,7 +38,7 @@ export class GalleryNavbarView {
         // get all of images on the current editor
         const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView
-            || 'markdown' !== activeView.getViewType()
+            // || 'markdown' !== activeView.getViewType()
             // modal-container: community plugin, flashcards (Space Repetition)
             || 0 < document.getElementsByClassName('modal-container').length) {
             if (this.galleryNavbarEl) this.galleryNavbarEl.hidden = true;
