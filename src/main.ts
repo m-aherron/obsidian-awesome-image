@@ -49,65 +49,67 @@ export default class ImageToolkitPlugin extends Plugin {
       }
     });
 
-    this.registerEvent(
-      this.app.vault.on("create", async (file) => {
-          if (!this.settings.realTimeUpdate)
-            return;
-          if (!(file instanceof TFile))
-            return;
-          // if the pasted image is created more than 1 second ago, ignore it
-          const timeGapMs = (new Date().getTime()) - file.stat.ctime;
-          if (timeGapMs > 1000)
-            return;
-          // only monitor image file creation
-          if (!isLocalImage(file.name) || !file.name.startsWith(OB_PASTED_IMAGE_PREFIX))
-            return;
+    this.app.workspace.onLayoutReady(() => {
+      this.registerEvent(
+        this.app.vault.on("create", async (file) => {
+            if (!this.settings.realTimeUpdate)
+              return;
+            if (!(file instanceof TFile))
+              return;
+            // if the pasted image is created more than 1 second ago, ignore it
+            const timeGapMs = (new Date().getTime()) - file.stat.ctime;
+            if (timeGapMs > 1000)
+              return;
+            // only monitor image file creation
+            if (!isLocalImage(file.name) || !file.name.startsWith(OB_PASTED_IMAGE_PREFIX))
+              return;
 
-          const oldFileName = file.path;
-          const fileData = await this.app.vault.readBinary(file);
-          const { newFileName, isDuplicated } = await getNewFileName(
-            this.app,
-            this.settings.mediaRootDirectory,
-            fileData
-          );
-          if (isDuplicated) {
-            const warn_txt = `IMAGE Duplicated! OPEN CONSOLE! FROM |${file.path}| TO |${newFileName}|, please edit manually`;
-            new Notice(warn_txt);
-            console.warn(warn_txt);
-            return;
+            const oldFileName = file.path;
+            const fileData = await this.app.vault.readBinary(file);
+            const { newFileName, isDuplicated } = await getNewFileName(
+              this.app,
+              this.settings.mediaRootDirectory,
+              fileData
+            );
+            if (isDuplicated) {
+              const warn_txt = `IMAGE Duplicated! OPEN CONSOLE! FROM |${file.path}| TO |${newFileName}|, please edit manually`;
+              new Notice(warn_txt);
+              console.warn(warn_txt);
+              return;
+            }
+            const activeFile = this.app.workspace.getActiveFile();
+            // get origin file link before renaming
+            const linkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
+
+            await ensureFolderExists(this.app, path.dirname(newFileName));
+            await this.app.fileManager.renameFile(file, newFileName);  // this will not change active file content
+
+            const newLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
+
+            const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+            if (!view || view.file.path != activeFile.path) {
+              new Notice(`Failed to rename ${newFileName}: no active editor`);
+              return;
+            }
+
+            const editor = view.editor;
+            const cursor = editor.getCursor();
+            const line = editor.getLine(cursor.line);
+            console.log("current line: ", line);
+            editor.transaction({
+              changes: [
+                {
+                  from: { ...cursor, ch: 0 },
+                  to: { ...cursor, ch: line.length },
+                  text: line.replace(linkText, newLinkText)
+                }
+              ]
+            });
+            new Notice(`Renamed ${oldFileName} to ${newFileName}`);
           }
-          const activeFile = this.app.workspace.getActiveFile();
-          // get origin file link before renaming
-          const linkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
-
-          await ensureFolderExists(this.app, path.dirname(newFileName));
-          await this.app.fileManager.renameFile(file, newFileName);  // this will not change active file content
-
-          const newLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
-
-          const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-          if (!view || view.file.path != activeFile.path) {
-            new Notice(`Failed to rename ${newFileName}: no active editor`);
-            return;
-          }
-
-          const editor = view.editor;
-          const cursor = editor.getCursor();
-          const line = editor.getLine(cursor.line);
-          console.log("current line: ", line);
-          editor.transaction({
-            changes: [
-              {
-                from: { ...cursor, ch: 0 },
-                to: { ...cursor, ch: line.length },
-                text: line.replace(linkText, newLinkText)
-              }
-            ]
-          });
-          new Notice(`Renamed ${oldFileName} to ${newFileName}`);
-        }
-      )
-    );
+        )
+      );
+    });
 
     // plugin settings
     this.addSettingTab(new ImageToolkitSettingTab(this.app, this));

@@ -1,10 +1,10 @@
 {
-  "id": "obsidian-awesome-image",
+  "id": "awesome-image",
   "name": "Awesome Image",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minAppVersion": "0.15.0",
   "description": "One-stop solution for image management.",
   "author": "AwesomeDog",
-  "authorUrl": "https://github.com/AwesomeDog/obsidian-awesome-image",
+  "authorUrl": "https://github.com/AwesomeDog",
   "isDesktopOnly": true
 }
