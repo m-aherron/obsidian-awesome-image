@@ -23,6 +23,9 @@ export async function replaceAsync(str: any, regex: any, asyncFn: any) {
 }
 
 export function isUrl(link: string) {
+    if (link.startsWith('data:image')) {
+        return false;
+    }
     try {
         return Boolean(new URL(link));
     } catch (_) {
