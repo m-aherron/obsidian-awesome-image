@@ -30,6 +30,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
+    "@simonwep/pickr": "^1.8.2",
     "crypto-js": "^4.1.1",
     "del-cli": "^5.0.0",
     "file-type": "^17.1.6",
@@ -37,11 +38,10 @@
     "got": "^12.3.0",
     "install": "^0.13.0",
     "is-svg": "^4.3.2",
-    "npm": "^8.16.0",
+    "md5-typescript": "^1.0.5",
+    "npm": "^11.0.0",
     "rollup-plugin-execute": "^1.1.1",
     "safe-regex": "^2.1.1",
-    "shx": "^0.3.4",
-    "@simonwep/pickr": "^1.8.2",
-    "md5-typescript": "^1.0.5"
+    "shx": "^0.3.4"
   }
 }

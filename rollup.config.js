@@ -25,6 +25,7 @@ export default {
     exports: "default",
     banner,
   },
+  context: 'this', // Preserve `this`
   external: ["obsidian"],
   plugins: [
     execute([
@@ -33,7 +34,7 @@ export default {
       `cp -u ${currentDir}/styles.css ${currentDir}/build/styles.css`,
     ]),
     typescript(),
-    nodeResolve({ browser: true }),
+    nodeResolve({ preferBuiltins: true }, { browser: true }),
     rollupJson(),
     commonjs(),
   ],
@@ -43,6 +44,11 @@ export default {
       warning.code === "EVAL" &&
       /.*\/node_modules\/file-type\/.*/.test(warning.loc.file)
     ) {
+      return;
+    }
+
+    // Suppress circular dependency warnings
+    if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.importer.includes('readable-stream')) {
       return;
     }
     warn(warning);
